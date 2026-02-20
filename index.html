@@ -78,212 +78,199 @@ button:active { transform: scale(.95); }
 <div id="history"></div>
 
 <script>
-
+// ================= AUDIO UNLOCK (iOS/Safari) =================
 let audioUnlocked = false;
-
 function unlockAudio() {
-
-  if(audioUnlocked) return;
-
+  if (audioUnlocked) return;
   const silent = new Audio(
     "data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAA..."
   );
-
-  silent.play().then(()=>{
+  silent.play().then(() => {
     audioUnlocked = true;
     console.log("Audio unlocked");
-  }).catch(()=>{});
-
-}
-const audioCache = {};
-
-function preloadSounds() {
-  for (const type in sounds) {
-    audioCache[type] = new Audio(sounds[type][0]);
-    audioCache[type].load();
-  }
+  }).catch(() => {});
 }
 
-preloadSounds();
-// unlock on first tap anywhere
-document.addEventListener("touchstart", unlockAudio, { once:true });
-document.addEventListener("click", unlockAudio, { once:true });
-// ================= DATA =================
-
-const chores = [
- { name:"🧹 Clean Room", stars:2 },
- { name:"🎹 Piano Practice", stars:1 },
- { name:"📚 Read Book", stars:1 },
- { name:"🧸 Put Away Toys", stars:1 },
- { name:"🥦 New Food", stars:1 },
- { name:"✨ Extra Helping", stars:1 }
-];
-
-const prizes = [
- { name:"🍬 Treat", cost:10 },
- { name:"🌳 Park", cost:20 },
- { name:"🌙 Sleepover", cost:20 },
- { name:"📚 Library", cost:25 } 
-];
-
-// ================= STATE =================
-
-let stars = parseInt(localStorage.stars)||0;
-let today = new Date().toDateString();
-
-let completed = JSON.parse(localStorage.completed||"{}");
-let history = JSON.parse(localStorage.history||"[]");
-
-if(localStorage.date!==today){
- completed={};
- localStorage.date=today;
-}
-
-// ================= SAVE =================
-
-function save(){
- localStorage.stars=stars;
- localStorage.completed=JSON.stringify(completed);
- localStorage.history=JSON.stringify(history);
- backupToDrive();
-}
-
-function update(){
- document.getElementById("starCount").innerText=stars;
-}
+document.addEventListener("touchstart", unlockAudio, { once: true });
+document.addEventListener("click", unlockAudio, { once: true });
 
 // ================= SOUND =================
-
-let audioPool = {};
-
+// Define sounds BEFORE preloading.
 const sounds = {
-  //star:new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA...");
   star: ["sounds/star.wav"],
   win: ["sounds/win.wav"],
-  redeem: ["sounds/redeem.wav"]
+  redeem: ["sounds/redeem.wav"],
+  // aliases used elsewhere
+  undo: ["sounds/star.wav"],
+  reward: ["sounds/redeem.wav"],
 };
 
+const audioCache = {};
+function preloadSounds() {
+  for (const type in sounds) {
+    const src = sounds[type] && sounds[type][0];
+    if (!src) continue;
+    const a = new Audio(src);
+    a.load();
+    audioCache[type] = a;
+  }
+}
+preloadSounds();
+
 function playSound(type) {
-
-  const audio = audioCache[type];
+  // fall back to a sensible default if an alias is missing
+  const audio = audioCache[type] || audioCache.star;
   if (!audio) return;
-
-  audio.currentTime = 0;
-
+  try {
+    audio.currentTime = 0;
+  } catch (_) {}
   audio.play().catch(e => {
     console.log("Play failed:", e);
   });
+}
 
+// ================= DATA =================
+const chores = [
+  { name: "🧹 Clean Room", stars: 2 },
+  { name: "🎹 Piano Practice", stars: 1 },
+  { name: "📚 Read Book", stars: 1 },
+  { name: "🧸 Put Away Toys", stars: 1 },
+  { name: "🥦 New Food", stars: 1 },
+  { name: "✨ Extra Helping", stars: 1 }
+];
+
+const prizes = [
+  { name: "🍬 Treat", cost: 10 },
+  { name: "🌳 Park", cost: 20 },
+  { name: "🌙 Sleepover", cost: 20 },
+  { name: "📚 Library", cost: 25 }
+];
+
+// ================= STATE =================
+let stars = parseInt(localStorage.stars || "0", 10);
+let today = new Date().toDateString();
+let completed = JSON.parse(localStorage.completed || "{}");
+let history = JSON.parse(localStorage.history || "[]");
+
+if (localStorage.date !== today) {
+  completed = {};
+  localStorage.date = today;
+}
+
+// ================= SAVE =================
+function save() {
+  localStorage.stars = String(stars);
+  localStorage.completed = JSON.stringify(completed);
+  localStorage.history = JSON.stringify(history);
+  // Backup is best-effort; don't break the app if it fails.
+  backupToDrive().catch(() => {});
+}
+
+function update() {
+  document.getElementById("starCount").innerText = stars;
 }
 
 // ================= ANIMATION =================
-
-function animateStars(){
- for(let i=0;i<5;i++){
-  let star=document.createElement("div");
-  star.innerHTML="⭐";
-  star.className="star";
-  star.style.left=Math.random()*100+"vw";
-  star.style.top="70vh";
-  document.body.appendChild(star);
-  setTimeout(()=>star.remove(),1000);
- }
+function animateStars() {
+  for (let i = 0; i < 5; i++) {
+    let star = document.createElement("div");
+    star.innerHTML = "⭐";
+    star.className = "star";
+    star.style.left = Math.random() * 100 + "vw";
+    star.style.top = "70vh";
+    document.body.appendChild(star);
+    setTimeout(() => star.remove(), 1000);
+  }
 }
 
 // ================= RENDER =================
+function renderChores() {
+  let div = document.getElementById("chores");
+  div.innerHTML = "";
+  chores.forEach((c, i) => {
+    let btn = document.createElement("button");
+    btn.className = "chore";
 
-function renderChores(){
- let div=document.getElementById("chores");
- div.innerHTML="";
+    if (completed[i]) {
+      btn.style.background = "#9bffb0";
+      btn.innerHTML = "✅ " + c.name + " (+ " + c.stars + " ⭐)";
+    } else {
+      btn.innerHTML = c.name + " (+ " + c.stars + " ⭐)";
+    }
 
- chores.forEach((c,i)=>{
-  let btn=document.createElement("button");
-  btn.className="chore";
+    btn.onclick = () => {
+      if (completed[i]) {
+        stars -= completed[i];
+        delete completed[i];
+        playSound("undo");
+      } else {
+        stars += c.stars;
+        completed[i] = c.stars;
+        animateStars();
+        playSound("star");
+      }
+      save();
+      update();
+      renderChores();
+      renderPrizes();
+    };
 
-  if(completed[i]){
-   btn.style.background="#9bffb0";
-   btn.innerHTML="✅ "+c.name+" (+ "+c.stars+" ⭐)";
-  } else {
-   btn.innerHTML=c.name+" (+ "+c.stars+" ⭐)";
-  }
-
-  btn.onclick=()=>{
-   if(completed[i]){
-    stars -= completed[i];
-    delete completed[i];
-    playSound("undo");
-   } else {
-    stars += c.stars;
-    completed[i]=c.stars;
-    animateStars();
-    playSound("star");
-   }
-
-   save();
-   update();
-   renderChores();
-   renderPrizes();
-  };
-
-  div.appendChild(btn);
- });
+    div.appendChild(btn);
+  });
 }
 
-function renderPrizes(){
- let div=document.getElementById("prizes");
- div.innerHTML="";
+function renderPrizes() {
+  let div = document.getElementById("prizes");
+  div.innerHTML = "";
 
- prizes.forEach(p=>{
-  let btn=document.createElement("button");
-  btn.className="prize";
-  btn.innerHTML=p.name+" (- "+p.cost+" ⭐)";
+  prizes.forEach(p => {
+    let btn = document.createElement("button");
+    btn.className = "prize";
+    btn.innerHTML = p.name + " (- " + p.cost + " ⭐)";
 
-  if(stars<p.cost){
-   btn.disabled=true;
-   btn.classList.add("disabled");
-  }
+    if (stars < p.cost) {
+      btn.disabled = true;
+      btn.classList.add("disabled");
+    }
 
-  btn.onclick=()=>{
-   stars-=p.cost;
-   history.unshift({
-    name:p.name,
-    date:new Date().toLocaleDateString()
-   });
+    btn.onclick = () => {
+      stars -= p.cost;
+      history.unshift({
+        name: p.name,
+        date: new Date().toLocaleDateString()
+      });
+      save();
+      update();
+      renderPrizes();
+      renderHistory();
+      animateStars();
+      playSound("reward");
+    };
 
-   save();
-   update();
-   renderPrizes();
-   renderHistory();
-   animateStars();
-   playSound("reward");
-  };
-
-  div.appendChild(btn);
- });
+    div.appendChild(btn);
+  });
 }
 
-function renderHistory(){
- let div=document.getElementById("history");
- div.innerHTML=history
- .slice(0,10)
- .map(h=>"⭐ "+h.name+" ("+h.date+")")
- .join("<br>");
+function renderHistory() {
+  let div = document.getElementById("history");
+  div.innerHTML = history
+    .slice(0, 10)
+    .map(h => "⭐ " + h.name + " (" + h.date + ")")
+    .join("<br>");
 }
 
 // ================= GOOGLE BACKUP =================
-
 const BACKUP_URL = "https://script.google.com/macros/s/AKfycbxROTbRETfZ8hCpVzvh6XMKmv5EoRLtd0BQcz6ivraOP0FJ-079eNvb9fo0cDr72gdi/exec";
 
-async function backupToDrive(){
+async function backupToDrive() {
   const data = { stars: stars, history: history };
-  await fetch(BACKUP_URL,{ method:"POST", body: JSON.stringify(data) });
+  await fetch(BACKUP_URL, { method: "POST", body: JSON.stringify(data) });
 }
 
-async function restoreFromDrive(){
+async function restoreFromDrive() {
   const res = await fetch(BACKUP_URL);
   const data = await res.json();
-
-  if(data.stars !== undefined){
+  if (data && data.stars !== undefined) {
     stars = data.stars;
     history = data.history || [];
     save();
@@ -293,9 +280,12 @@ async function restoreFromDrive(){
 }
 
 // ================= START =================
-
-async function start(){
-  await restoreFromDrive();
+async function start() {
+  try {
+    await restoreFromDrive();
+  } catch (_) {
+    // ignore restore failures (offline, blocked, etc.)
+  }
   update();
   renderChores();
   renderPrizes();
@@ -303,7 +293,6 @@ async function start(){
 }
 
 start();
-
 </script>
 
 </body>
