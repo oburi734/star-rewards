@@ -97,12 +97,11 @@ document.addEventListener("click", unlockAudio, { once: true });
 // ================= SOUND =================
 // Define sounds BEFORE preloading.
 const sounds = {
-  star: ["sounds/star.wav"],
-  win: ["sounds/win.wav"],
-  redeem: ["sounds/redeem.wav"],
-  // aliases used elsewhere
-  undo: ["sounds/star.wav"],
-  reward: ["sounds/redeem.wav"],
+  star: ["sounds/star_gain.wav"],
+  redeem: ["sounds/redeem_reward.wav"],
+  bonus: ["sounds/bonus.wav"],
+  undo: ["sounds/undo.wav"],
+  newday: ["sounds/new_day.wav"]
 };
 
 const audioCache = {};
