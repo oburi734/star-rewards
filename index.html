@@ -78,7 +78,26 @@ button:active { transform: scale(.95); }
 <div id="history"></div>
 
 <script>
+let audioUnlocked = false;
 
+function unlockAudio() {
+
+  if(audioUnlocked) return;
+
+  const silent = new Audio(
+    "data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAA..."
+  );
+
+  silent.play().then(()=>{
+    audioUnlocked = true;
+    console.log("Audio unlocked");
+  }).catch(()=>{});
+
+}
+
+// unlock on first tap anywhere
+document.addEventListener("touchstart", unlockAudio, { once:true });
+document.addEventListener("click", unlockAudio, { once:true });
 // ================= DATA =================
 
 const chores = [
@@ -140,18 +159,20 @@ const sounds = {
 };
 
 function playSound(type){
+
+  if(!audioUnlocked){
+    unlockAudio();
+    return;
+  }
+
   const list = sounds[type];
   if(!list) return;
 
   const soundUrl = list[Math.floor(Math.random()*list.length)];
 
-  if(!audioPool[soundUrl]){
-    audioPool[soundUrl] = new Audio(soundUrl);
-    audioPool[soundUrl].volume = 0.6;
-  }
+  const audio = new Audio(soundUrl);
+  audio.volume = 0.6;
 
-  const audio = audioPool[soundUrl];
-  audio.currentTime = 0;
   audio.play().catch(()=>{});
 }
 
