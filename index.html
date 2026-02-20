@@ -147,28 +147,31 @@ const prizes = [
 ];
 
 // ================= STATE =================
-let stars = parseInt(localStorage.stars || "0", 10);
-let today = new Date().toDateString();
-let completed = JSON.parse(localStorage.completed || "{}");
-let history = JSON.parse(localStorage.history || "[]");
 
-if (localStorage.date !== today) {
-  completed = {};
-  localStorage.date = today;
+let stars = parseInt(localStorage.stars)||0;
+let today = new Date().toDateString();
+
+let completed = JSON.parse(localStorage.completed||"{}");
+let history = JSON.parse(localStorage.history||"[]");
+
+if(localStorage.date!==today){
+ completed={};
+ localStorage.date=today;
 }
 
 // ================= SAVE =================
-function save() {
-  localStorage.stars = String(stars);
-  localStorage.completed = JSON.stringify(completed);
-  localStorage.history = JSON.stringify(history);
-  // Backup is best-effort; don't break the app if it fails.
-  backupToDrive().catch(() => {});
+
+function save(){
+ localStorage.stars=stars;
+ localStorage.completed=JSON.stringify(completed);
+ localStorage.history=JSON.stringify(history);
+ backupToDrive();
 }
 
-function update() {
-  document.getElementById("starCount").innerText = stars;
+function update(){
+ document.getElementById("starCount").innerText=stars;
 }
+
 
 // ================= ANIMATION =================
 function animateStars() {
