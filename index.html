@@ -1,0 +1,154 @@
+
+<h1>🌈 Xime's Rewards🦄</h1>
+
+<div class="star-display">
+  <span id="bigStars">⭐⭐⭐</span>
+</div>
+
+<div class="count">
+  Stars: <span id="starCount">0</span>
+</div>
+
+<h2>✨ Daily Activities ✨</h2>
+<div id="chores"></div>
+
+<h2>🎁 Prize Store 🎁</h2>
+<div id="prizes"></div>
+
+<h2>📜 Reward History 📜</h2>
+<div id="history"></div>
+
+
+body {
+  font-family: -apple-system, system-ui;
+  text-align: center;
+  background: linear-gradient(180deg, #ffb6f0, #c6a8ff);
+  color: #5a2a7a;
+}
+
+h1 {
+  font-size: 34px;
+}
+
+button {
+  font-size: 20px;
+  padding: 16px;
+  margin: 8px;
+  border-radius: 20px;
+  border: none;
+  width: 90%;
+  box-shadow: 0 4px 0 rgba(0,0,0,.2);
+}
+
+button:active {
+  transform: scale(.95);
+}
+
+.chore {
+  background: #ffe066;
+}
+
+.prize {
+  background: #8be0ff;
+}
+
+.undo {
+  background: #ff9aa2;
+}
+
+.disabled {
+  background: #ccc;
+}
+
+.star {
+  position: fixed;
+  font-size: 30px;
+  animation: fly 1s ease-out forwards;
+}
+
+@keyframes fly {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-200px) scale(2);
+    opacity: 0;
+  }
+}
+
+.count {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+#history {
+  font-size: 16px;
+}
+
+body {
+  font-family: -apple-system, system-ui;
+  text-align: center;
+  background: linear-gradient(180deg, #ffb6f0, #c6a8ff);
+  color: #5a2a7a;
+}
+
+h1 {
+  font-size: 34px;
+}
+
+button {
+  font-size: 20px;
+  padding: 16px;
+  margin: 8px;
+  border-radius: 20px;
+  border: none;
+  width: 90%;
+  box-shadow: 0 4px 0 rgba(0,0,0,.2);
+}
+
+button:active {
+  transform: scale(.95);
+}
+
+.chore {
+  background: #ffe066;
+}
+
+.prize {
+  background: #8be0ff;
+}
+
+.undo {
+  background: #ff9aa2;
+}
+
+.disabled {
+  background: #ccc;
+}
+
+.star {
+  position: fixed;
+  font-size: 30px;
+  animation: fly 1s ease-out forwards;
+}
+
+@keyframes fly {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-200px) scale(2);
+    opacity: 0;
+  }
+}
+
+.count {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+#history {
+  font-size: 16px;
+}
