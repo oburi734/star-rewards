@@ -78,16 +78,7 @@ button:active { transform: scale(.95); }
 <div id="history"></div>
 
 <script>
-const audioCache = {};
 
-function preloadSounds() {
-  for (const type in sounds) {
-    audioCache[type] = new Audio(sounds[type][0]);
-    audioCache[type].load();
-  }
-}
-
-preloadSounds();
 let audioUnlocked = false;
 
 function unlockAudio() {
@@ -104,7 +95,16 @@ function unlockAudio() {
   }).catch(()=>{});
 
 }
+const audioCache = {};
 
+function preloadSounds() {
+  for (const type in sounds) {
+    audioCache[type] = new Audio(sounds[type][0]);
+    audioCache[type].load();
+  }
+}
+
+preloadSounds();
 // unlock on first tap anywhere
 document.addEventListener("touchstart", unlockAudio, { once:true });
 document.addEventListener("click", unlockAudio, { once:true });
