@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Xime's Rewards</title>
+<title>🌈 Xime's Rewards 🦄</title>
 
 <style>
 body {
@@ -13,9 +13,7 @@ body {
   color: #5a2a7a;
 }
 
-h1 {
-  font-size: 34px;
-}
+h1 { font-size: 34px; }
 
 button {
   font-size: 20px;
@@ -27,25 +25,11 @@ button {
   box-shadow: 0 4px 0 rgba(0,0,0,.2);
 }
 
-button:active {
-  transform: scale(.95);
-}
+button:active { transform: scale(.95); }
 
-.chore {
-  background: #ffe066;
-}
-
-.prize {
-  background: #8be0ff;
-}
-
-.undo {
-  background: #ff9aa2;
-}
-
-.disabled {
-  background: #ccc;
-}
+.chore { background: #ffe066; }
+.prize { background: #8be0ff; }
+.disabled { background: #ccc; }
 
 .star {
   position: fixed;
@@ -54,14 +38,8 @@ button:active {
 }
 
 @keyframes fly {
-  from {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(-200px) scale(2);
-    opacity: 0;
-  }
+  from { transform: translateY(0) scale(1); opacity: 1; }
+  to { transform: translateY(-200px) scale(2); opacity: 0; }
 }
 
 .count {
@@ -74,19 +52,16 @@ button:active {
   margin-bottom: 10px;
 }
 
-#history {
-  font-size: 16px;
-}
+#history { font-size: 16px; }
 </style>
-
 </head>
 
 <body>
 
-<h1>🌈 Xime's Rewards🦄</h1>
+<h1>🌈 Xime's Rewards 🦄</h1>
 
 <div class="star-display">
-  <span id="bigStars">⭐⭐⭐</span>
+  ⭐⭐⭐
 </div>
 
 <div class="count">
@@ -103,8 +78,210 @@ button:active {
 <div id="history"></div>
 
 <script>
-// placeholder so page loads without errors
-// paste your existing JavaScript BELOW this line
+
+// ================= DATA =================
+
+const chores = [
+ { name:"🧹 Clean Room", stars:2 },
+ { name:"🎹 Piano Practice", stars:1 },
+ { name:"📚 Read Book", stars:1 },
+ { name:"🧸 Put Away Toys", stars:1 },
+ { name:"🥦 New Food", stars:1 },
+ { name:"✨ Extra Helping", stars:1 }
+];
+
+const prizes = [
+ { name:"🍬 Treat", cost:10 },
+ { name:"🌳 Park", cost:20 },
+ { name:"🌙 Sleepover", cost:20 },
+ { name:"📚 Library", cost:25 } 
+];
+
+// ================= STATE =================
+
+let stars = parseInt(localStorage.stars)||0;
+let today = new Date().toDateString();
+
+let completed = JSON.parse(localStorage.completed||"{}");
+let history = JSON.parse(localStorage.history||"[]");
+
+if(localStorage.date!==today){
+ completed={};
+ localStorage.date=today;
+}
+
+// ================= SAVE =================
+
+function save(){
+ localStorage.stars=stars;
+ localStorage.completed=JSON.stringify(completed);
+ localStorage.history=JSON.stringify(history);
+ backupToDrive();
+}
+
+function update(){
+ document.getElementById("starCount").innerText=stars;
+}
+
+// ================= SOUND =================
+
+let audioPool = {};
+
+const sounds = {
+  star: [
+    "https://cdn.jsdelivr.net/gh/joeburia/kid-sounds/star1.mp3"
+  ],
+  reward: [
+    "https://cdn.jsdelivr.net/gh/joeburia/kid-sounds/reward.mp3"
+  ],
+  undo: [
+    "https://cdn.jsdelivr.net/gh/joeburia/kid-sounds/click.mp3"
+  ]
+};
+
+function playSound(type){
+  const list = sounds[type];
+  if(!list) return;
+
+  const soundUrl = list[Math.floor(Math.random()*list.length)];
+
+  if(!audioPool[soundUrl]){
+    audioPool[soundUrl] = new Audio(soundUrl);
+    audioPool[soundUrl].volume = 0.6;
+  }
+
+  const audio = audioPool[soundUrl];
+  audio.currentTime = 0;
+  audio.play().catch(()=>{});
+}
+
+// ================= ANIMATION =================
+
+function animateStars(){
+ for(let i=0;i<5;i++){
+  let star=document.createElement("div");
+  star.innerHTML="⭐";
+  star.className="star";
+  star.style.left=Math.random()*100+"vw";
+  star.style.top="70vh";
+  document.body.appendChild(star);
+  setTimeout(()=>star.remove(),1000);
+ }
+}
+
+// ================= RENDER =================
+
+function renderChores(){
+ let div=document.getElementById("chores");
+ div.innerHTML="";
+
+ chores.forEach((c,i)=>{
+  let btn=document.createElement("button");
+  btn.className="chore";
+
+  if(completed[i]){
+   btn.style.background="#9bffb0";
+   btn.innerHTML="✅ "+c.name+" (+ "+c.stars+" ⭐)";
+  } else {
+   btn.innerHTML=c.name+" (+ "+c.stars+" ⭐)";
+  }
+
+  btn.onclick=()=>{
+   if(completed[i]){
+    stars -= completed[i];
+    delete completed[i];
+    playSound("undo");
+   } else {
+    stars += c.stars;
+    completed[i]=c.stars;
+    animateStars();
+    playSound("star");
+   }
+
+   save();
+   update();
+   renderChores();
+   renderPrizes();
+  };
+
+  div.appendChild(btn);
+ });
+}
+
+function renderPrizes(){
+ let div=document.getElementById("prizes");
+ div.innerHTML="";
+
+ prizes.forEach(p=>{
+  let btn=document.createElement("button");
+  btn.className="prize";
+  btn.innerHTML=p.name+" (- "+p.cost+" ⭐)";
+
+  if(stars<p.cost){
+   btn.disabled=true;
+   btn.classList.add("disabled");
+  }
+
+  btn.onclick=()=>{
+   stars-=p.cost;
+   history.unshift({
+    name:p.name,
+    date:new Date().toLocaleDateString()
+   });
+
+   save();
+   update();
+   renderPrizes();
+   renderHistory();
+   animateStars();
+   playSound("reward");
+  };
+
+  div.appendChild(btn);
+ });
+}
+
+function renderHistory(){
+ let div=document.getElementById("history");
+ div.innerHTML=history
+ .slice(0,10)
+ .map(h=>"⭐ "+h.name+" ("+h.date+")")
+ .join("<br>");
+}
+
+// ================= GOOGLE BACKUP =================
+
+const BACKUP_URL = "https://script.google.com/macros/s/AKfycbxROTbRETfZ8hCpVzvh6XMKmv5EoRLtd0BQcz6ivraOP0FJ-079eNvb9fo0cDr72gdi/exec";
+
+async function backupToDrive(){
+  const data = { stars: stars, history: history };
+  await fetch(BACKUP_URL,{ method:"POST", body: JSON.stringify(data) });
+}
+
+async function restoreFromDrive(){
+  const res = await fetch(BACKUP_URL);
+  const data = await res.json();
+
+  if(data.stars !== undefined){
+    stars = data.stars;
+    history = data.history || [];
+    save();
+    update();
+    renderHistory();
+  }
+}
+
+// ================= START =================
+
+async function start(){
+  await restoreFromDrive();
+  update();
+  renderChores();
+  renderPrizes();
+  renderHistory();
+}
+
+start();
 
 </script>
 
