@@ -78,7 +78,17 @@ button:active { transform: scale(.95); }
 <div id="history"></div>
 
 <script>
-let audioUnlocked = false;
+const audioCache = {};
+
+function preloadSounds() {
+  for (const type in sounds) {
+    audioCache[type] = new Audio(sounds[type][0]);
+    audioCache[type].load();
+  }
+}
+
+preloadSounds();
+  let audioUnlocked = false;
 
 function unlockAudio() {
 
@@ -153,22 +163,17 @@ const sounds = {
   redeem: ["sounds/redeem.wav"]
 };
 
-function playSound(type){
+function playSound(type) {
 
-  if(!audioUnlocked){
-    unlockAudio();
-    return;
-  }
+  const audio = audioCache[type];
+  if (!audio) return;
 
-  const list = sounds[type];
-  if(!list) return;
+  audio.currentTime = 0;
 
-  const soundUrl = list[Math.floor(Math.random()*list.length)];
+  audio.play().catch(e => {
+    console.log("Play failed:", e);
+  });
 
-  const audio = new Audio(soundUrl);
-  audio.volume = 0.6;
-
-  audio.play().catch(()=>{});
 }
 
 // ================= ANIMATION =================
